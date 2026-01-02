@@ -160,6 +160,23 @@
       <label data-i18next="preferences.schedule.enableMiniBreaks" for="enableMiniBreaks"></label>
     </div>
     <div>
+      <label data-i18next="preferences.schedule.notifyBefore" data-same-width-label for="miniBreakNotifyBefore"></label>
+      <input type="range" min="5" max="120" step="5" list="tickmarksMiniBreakNotifyBefore" name="microbreakNotificationInterval"
+        data-divisor="1000" id="miniBreakNotifyBefore">
+      <datalist id="tickmarksMiniBreakNotifyBefore">
+        <option value="5"></option>
+        <option value="10"></option>
+        <option value="15"></option>
+        <option value="20"></option>
+        <option value="30"></option>
+        <option value="45"></option>
+        <option value="60"></option>
+        <option value="90"></option>
+        <option value="120"></option>
+      </datalist>
+      <output data-unit="seconds"></output>
+    </div>
+    <div>
       <label data-i18next="preferences.schedule.breakFor" data-same-width-label for="miniBreakFor"></label>
       <input type="range" min="10" max="600" step="10" list="tickmarksMiniBreakFor" name="microbreakDuration"
         data-divisor="1000" id="miniBreakFor">
@@ -185,9 +202,13 @@
     </div>
     <div>
       <label data-i18next="preferences.schedule.every" data-same-width-label for="miniBreakEvery"></label>
-      <input type="range" min="5" max="65" step="5" list="tickmarksMiniBreakEvery" name="microbreakInterval"
+      <input type="range" min="1" max="65" step="1" list="tickmarksMiniBreakEvery" name="microbreakInterval"
         data-divisor="60000" id="miniBreakEvery">
       <datalist id="tickmarksMiniBreakEvery">
+        <option value="1"></option>
+        <option value="2"></option>
+        <option value="3"></option>
+        <option value="4"></option>
         <option value="10"></option>
         <option value="20"></option>
         <option value="30"></option>
@@ -220,6 +241,25 @@
     <div>
       <input type="checkbox" class="enabletype" value="break" id="enableLongBreaks">
       <label data-i18next="preferences.schedule.enableLongBreaks" for="enableLongBreaks"></label>
+    </div>
+    <div>
+      <label data-i18next="preferences.schedule.notifyBefore" data-same-width-label for="longBreakNotifyBefore"></label>
+      <input type="range" min="10" max="300" step="10" list="tickmarksLongBreakNotifyBefore" name="breakNotificationInterval"
+        data-divisor="1000" id="longBreakNotifyBefore">
+      <datalist id="tickmarksLongBreakNotifyBefore">
+        <option value="10"></option>
+        <option value="20"></option>
+        <option value="30"></option>
+        <option value="40"></option>
+        <option value="50"></option>
+        <option value="60"></option>
+        <option value="90"></option>
+        <option value="120"></option>
+        <option value="180"></option>
+        <option value="240"></option>
+        <option value="300"></option>
+      </datalist>
+      <output data-unit="seconds"></output>
     </div>
     <div>
       <label data-i18next="preferences.schedule.breakFor" data-same-width-label for="longBreakFor"></label>

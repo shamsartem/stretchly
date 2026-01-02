@@ -63,6 +63,7 @@ let appIcon = null
 let autostartManager = null
 let displayManager = null
 let processWin = null
+let prebreakWins = null
 let microbreakWins = null
 let breakWins = null
 let preferencesWin = null
@@ -672,16 +673,112 @@ function checkVersion () {
 }
 
 function startMicrobreakNotification () {
-  showNotification(i18next.t('main.microbreakIn', { seconds: settings.get('microbreakNotificationInterval') / 1000 }))
-  log.info('Stretchly: showing Mini break notification')
+  showPrebreakNotification('microbreak', settings.get('microbreakNotificationInterval'))
+  log.info('Stretchly: showing Mini break notification banner')
   breakPlanner.nextBreakAfterNotification()
   updateTray()
 }
 
 function startBreakNotification () {
-  showNotification(i18next.t('main.breakIn', { seconds: settings.get('breakNotificationInterval') / 1000 }))
-  log.info('Stretchly: showing Long break notification')
+  showPrebreakNotification('break', settings.get('breakNotificationInterval'))
+  log.info('Stretchly: showing Long break notification banner')
   breakPlanner.nextBreakAfterNotification()
+  updateTray()
+}
+
+function closePrebreakNotification () {
+  if (!prebreakWins) return
+  prebreakWins.forEach(win => {
+    if (!win.isDestroyed()) {
+      win.close()
+    }
+  })
+  prebreakWins = null
+}
+
+function showPrebreakNotification (type, intervalMs) {
+  closePrebreakNotification()
+  prebreakWins = []
+  const showBreaksAsRegularWindows = settings.get('showBreaksAsRegularWindows')
+  const modalPath = 'file://' + join(__dirname, '/prebreak.html')
+  const message = type === 'microbreak'
+    ? i18next.t('main.microbreakIn', { seconds: intervalMs / 1000 })
+    : i18next.t('main.breakIn', { seconds: intervalMs / 1000 })
+  const background = type === 'microbreak' ? settings.get('miniBreakColor') : settings.get('mainColor')
+
+  for (let localDisplayId = 0; localDisplayId < displayManager.getDisplayCount(); localDisplayId++) {
+    const windowOptions = {
+      width: Math.floor(displayManager.getDisplayWidth(localDisplayId) * settings.get('breakWindowWidth')),
+      height: Math.floor(displayManager.getDisplayHeight(localDisplayId) * settings.get('breakWindowHeight')),
+      autoHideMenuBar: true,
+      icon: windowIconPath(),
+      resizable: false,
+      frame: showBreaksAsRegularWindows,
+      show: false,
+      backgroundThrottling: false,
+      transparent: !showBreaksAsRegularWindows,
+      ...getBlurredBackgroundWindowOptions(),
+      backgroundColor: calculateBackgroundColor(background),
+      skipTaskbar: !showBreaksAsRegularWindows,
+      focusable: true,
+      alwaysOnTop: !showBreaksAsRegularWindows,
+      hasShadow: false,
+      title: 'Stretchly',
+      titleBarStyle: process.platform === 'darwin' ? (showBreaksAsRegularWindows ? 'default' : 'hidden') : undefined,
+      titleBarOverlay: process.platform === 'darwin' ? !showBreaksAsRegularWindows : undefined,
+      webPreferences: {
+        preload: join(__dirname, './prebreak-preload.mjs'),
+        sandbox: false
+      }
+    }
+
+    if (settings.get('fullscreen') && process.platform !== 'darwin') {
+      windowOptions.width = displayManager.getDisplayWidth(localDisplayId)
+      windowOptions.height = displayManager.getDisplayHeight(localDisplayId)
+    }
+
+    const prebreakWin = new BrowserWindow(windowOptions)
+    prebreakWin.loadURL(modalPath)
+    prebreakWin.once('closed', () => {
+      if (prebreakWins) {
+        prebreakWins = prebreakWins.filter(win => win !== prebreakWin && !win.isDestroyed())
+        if (prebreakWins.length === 0) {
+          prebreakWins = null
+        }
+      }
+    })
+    prebreakWin.webContents.once('did-finish-load', () => {
+      prebreakWin.webContents.send('prebreak-data', {
+        type,
+        seconds: intervalMs / 1000,
+        message,
+        background
+      })
+      prebreakWin.show()
+    })
+    prebreakWins.push(prebreakWin)
+  }
+}
+
+function skipUpcomingBreak () {
+  const ref = breakPlanner?.scheduler?.reference
+  const isPrebreak = ref === 'startMicrobreakNotification' || ref === 'startBreakNotification'
+  const isBreakScheduled = isPrebreak || ref === 'startMicrobreak' || ref === 'startBreak'
+  if (!isBreakScheduled) return
+  closePrebreakNotification()
+  if (breakPlanner.scheduler) {
+    breakPlanner.scheduler.cancel()
+  }
+
+  // Advance counters so the skipped break is not immediately rescheduled
+  if (ref === 'startMicrobreak' || ref === 'startMicrobreakNotification') {
+    breakPlanner.breakNumber += 1
+  } else if (ref === 'startBreak' || ref === 'startBreakNotification') {
+    breakPlanner.breakNumber = 0
+  }
+
+  breakPlanner.nextBreak()
+  log.info('Stretchly: skipping upcoming break')
   updateTray()
 }
 
@@ -702,6 +799,7 @@ function getBlurredBackgroundWindowOptions () {
 }
 
 function startMicrobreak () {
+  closePrebreakNotification()
   // don't start another break if break running
   if (microbreakWins) {
     log.warn('Stretchly: Mini break already running, not starting Mini break')
@@ -856,6 +954,7 @@ function startMicrobreak () {
 }
 
 function startBreak () {
+  closePrebreakNotification()
   if (breakWins) {
     log.warn('Stretchly: Long break already running, not starting Long break')
     return
@@ -1301,6 +1400,16 @@ function getTrayMenuTemplate () {
     })
   }
 
+  const schedulerRef = breakPlanner.scheduler?.reference
+  const canSkipUpcomingBreak = ['startMicrobreakNotification', 'startBreakNotification', 'startMicrobreak', 'startBreak'].includes(schedulerRef)
+  trayMenu.push({
+    label: i18next.t('main.skipUpcomingBreak'),
+    enabled: !!canSkipUpcomingBreak,
+    click: () => skipUpcomingBreak()
+  }, {
+    type: 'separator'
+  })
+
   if ((breakPlanner.scheduler.reference === 'finishMicrobreak' && settings.get('microbreakStrictMode') &&
         !settings.get('showTrayMenuInStrictMode')) ||
       (breakPlanner.scheduler.reference === 'finishBreak' && settings.get('breakStrictMode') &&
@@ -1448,6 +1557,10 @@ function showNotification (text) {
     settings.get('silentNotifications')
   )
 }
+
+ipcMain.on('dismiss-prebreak', () => {
+  closePrebreakNotification()
+})
 
 ipcMain.on('postpone-mini-break', function (event) {
   postponeMicrobreak()

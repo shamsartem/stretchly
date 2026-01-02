@@ -8,6 +8,7 @@
     "toBreak": "Long break",
     "toMicrobreak": "Mini break",
     "skipToTheNext": "Skip to the next",
+    "skipUpcomingBreak": "Skip upcoming break",
     "resume": "Resume breaks",
     "pause": "Pause breaks",
     "forHour": "1 hour",
@@ -29,7 +30,8 @@
     "postpone": "Postpone this break",
     "skip": "Skip this break",
     "title": "Time to take a break!",
-    "finish": "Finish this break"
+    "finish": "Finish this break",
+    "dismissNotification": "Dismiss"
   },
   "preferences": {
     "title": "Stretchly Preferences",
@@ -56,6 +58,7 @@
       "miniBreaks": "Mini breaks:",
       "miniBreaksInfo": "Mini breaks are short breaks taken regularly to give you a chance to stretch and relax.",
       "enableMiniBreaks": "Enable Mini breaks",
+      "notifyBefore": "Notify before:",
       "breakFor": "Break for:",
       "every": "Every:",
       "showNotificationBeforeMiniBreak": "Show notification before Mini break starts",

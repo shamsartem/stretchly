@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <title data-i18next="break.title"></title>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/color-scheme.css">
+    <link rel="stylesheet" type="text/css" href="css/commons.css">
+    <link rel="stylesheet" type="text/css" href="css/break.css">
+    <style>
+      body {
+        opacity: 1;
+      }
+      body:not(.ready) {
+        opacity: 0;
+      }
+      .prebreak-banner {
+        height: 100vh;
+        color: white;
+        text-align: center;
+        padding: 32px;
+        box-sizing: border-box;
+      }
+      .prebreak-message {
+        font-size: 32px;
+        margin-bottom: 12px;
+        display: block;
+      }
+      #dismiss {
+        font-size: 16px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #ffffff;
+        color: #000000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="breaks prebreak-banner">
+      <div>
+        <div class="microbreak-idea prebreak-message" dir="auto"></div>
+      </div>
+      <div class="controls">
+        <button id="dismiss"></button>
+      </div>
+      <div></div>
+    </div>
+  </body>
+  <script type="module" src="./prebreak-renderer.js"></script>
+</html>

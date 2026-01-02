@@ -13,6 +13,7 @@
     "postinstall": "electron-builder install-app-deps",
     "pack": "electron-builder build --dir",
     "dist": "electron-builder build",
+    "dist:appimage": "electron-builder build --linux AppImage",
     "test": "vitest run",
     "test-single": "vitest run $1",
     "coverage": "vitest run --coverage",
@@ -41,6 +42,9 @@
   "build": {
     "appId": "net.hovancik.stretchly",
     "productName": "Stretchly",
+    "files": [
+      "!**/.direnv/**"
+    ],
     "dmg": {
       "icon": "build/icon.icns",
       "iconSize": 128,
